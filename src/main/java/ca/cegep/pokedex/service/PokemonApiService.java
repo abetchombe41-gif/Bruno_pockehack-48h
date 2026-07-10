@@ -25,7 +25,7 @@ public class PokemonApiService {
      * Interroge la PokéAPI et extrait les nœuds JSON avec Jackson.
      */
     public Pokemon chercherPokemon(String nomOuId) throws Exception {
-        String url = "https://pokeapi.co" + nomOuId.toLowerCase().trim();
+        String url = "https://pokeapi.co/api/v2/pokemon/" + nomOuId.toLowerCase().trim();
         HttpRequest requete = HttpRequest.newBuilder().uri(URI.create(url)).GET().build();
 
         HttpResponse<String> reponse = client.send(requete, HttpResponse.BodyHandlers.ofString());

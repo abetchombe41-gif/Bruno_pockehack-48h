@@ -9,11 +9,11 @@ public class PokemonDao {
     // Ajustez le nom de la base de données et les identifiants selon votre pgAdmin local
     private final String url = "jdbc:postgresql://localhost:5432/pockehack_db";
     private final String utilisateur = "postgres";
-    private final String motDePasse = "postgres";
+    private final String motDePasse = "12345*";
 
     /**
      * Insère un Pokémon ou met à jour ses infos s'il existe déjà (Mécanisme d'UPSERT).
-     * Utilise exclusivement PreparedStatement et try-with-resources 
+     * Utilise exclusivement PreparedStatement et try-with-resources
      */
     public void sauvegarderOuMettreAJour(Pokemon pokemon) throws Exception {
         String sql = """

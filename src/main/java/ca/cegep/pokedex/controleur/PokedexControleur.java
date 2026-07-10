@@ -65,6 +65,7 @@ public class PokedexControleur {
                 });
 
             } catch (Exception e) {
+                e.printStackTrace();
                 Platform.runLater(() -> {
                     afficherAlerteErreur("Erreur", e.getMessage());
                     boutonRecherche.setDisable(false);
