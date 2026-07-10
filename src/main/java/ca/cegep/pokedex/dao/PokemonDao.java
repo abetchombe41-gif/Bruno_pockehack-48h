@@ -4,16 +4,15 @@ import ca.cegep.pokedex.modele.Pokemon;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 public class PokemonDao {
-    // Ajustez le nom de la base de données et les identifiants selon votre pgAdmin local
     private final String url = "jdbc:postgresql://localhost:5432/pockehack_db";
     private final String utilisateur = "postgres";
-    private final String motDePasse = "12345*";
+    private final String motDePasse = "12345*"; // Ajustez si votre mot de passe pgAdmin est différent
 
     /**
-     * Insère un Pokémon ou met à jour ses infos s'il existe déjà (Mécanisme d'UPSERT).
-     * Utilise exclusivement PreparedStatement et try-with-resources
+     * Insère un Pokémon ou le met à jour s'il existe déjà (UPSERT).
      */
     public void sauvegarderOuMettreAJour(Pokemon pokemon) throws Exception {
         String sql = """
@@ -50,5 +49,37 @@ public class PokemonDao {
 
             ps.executeUpdate();
         }
+    }
+
+    /**
+     * Récupère un Pokémon depuis PostgreSQL par son nom.
+     */
+    public Pokemon recupererParNom(String nom) throws Exception {
+        String sql = "SELECT * FROM pokemon WHERE nom = ?;";
+
+        try (Connection con = DriverManager.getConnection(url, utilisateur, motDePasse);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, nom.toLowerCase().trim());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Pokemon(
+                            rs.getInt("api_id"),
+                            rs.getString("nom"),
+                            rs.getString("type_principal"),
+                            rs.getString("type_secondaire"),
+                            rs.getString("url_image"),
+                            rs.getInt("pv"),
+                            rs.getInt("attaque"),
+                            rs.getInt("defense"),
+                            rs.getInt("attaque_speciale"),
+                            rs.getInt("defense_speciale"),
+                            rs.getInt("vitesse")
+                    );
+                }
+            }
+        }
+        return null;
     }
 }

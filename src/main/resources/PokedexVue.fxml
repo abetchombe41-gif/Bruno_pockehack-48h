@@ -11,8 +11,12 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import java.net.URL?>
 
 <BorderPane minHeight="600.0" minWidth="800.0" xmlns="http://javafx.com" xmlns:fx="http://javafx.com" fx:controller="ca.cegep.pokedex.controleur.PokedexControleur">
+    <stylesheets>
+        <URL value="@style.css" />
+    </stylesheets>
     <left>
         <VBox spacing="10.0" prefWidth="250.0" BorderPane.alignment="CENTER">
             <children>
@@ -32,8 +36,8 @@
         </VBox>
     </left>
     <center>
-        <VBox alignment="TOP_CENTER" spacing="20.0" BorderPane.alignment="CENTER">
-            <children>
+        <VBox fx:id="conteneurFiche" alignment="TOP_CENTER" spacing="20.0" BorderPane.alignment="CENTER">
+        <children>
                 <Label fx:id="labelNomPokemon" text="Pokédex Ultime" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
                 <Label fx:id="labelTypes" text="Types: --" style="-fx-font-style: italic;" />
                 <ImageView fx:id="imagePokemon" fitHeight="200.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" />
