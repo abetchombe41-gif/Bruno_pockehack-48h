@@ -1,6 +1,6 @@
 # PokéHack 48h - Le Pokédex Ultime 🚀
 
-Projet de mi-session réalisé en binôme(dans ce cas solo pour moi) dans le cadre du cours **420-930-MA (Session Été 2026)**. Cette application JavaFX est un Pokédex complet, fluide et asynchrone, connecté à la PokéAPI v2 et persistant grâce à une base de données locale PostgreSQL.
+Projet de mi-session réalisé en binôme(dans ce cas solo pour moi) dans le cadre du cours Algorithmes et modèles de programmation (Session Été 2026)**. Cette application JavaFX est un Pokédex complet, fluide et asynchrone, connecté à la PokéAPI v2 et persistant grâce à une base de données locale PostgreSQL.
 
 ---
 

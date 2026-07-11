@@ -11,7 +11,7 @@ import java.util.List;
 public class PokemonDao {
     private final String url = "jdbc:postgresql://localhost:5432/pockehack_db";
     private final String utilisateur = "postgres";
-    private final String motDePasse = "postgres"; // Ajustez si votre mot de passe pgAdmin est différent
+    private final String motDePasse = "12345*"; // Ajustez si votre mot de passe pgAdmin est différent
 
     /**
      * Insère un Pokémon ou le met à jour s'il existe déjà (UPSERT).
