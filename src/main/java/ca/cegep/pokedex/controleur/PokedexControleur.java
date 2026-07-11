@@ -7,6 +7,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
@@ -14,40 +15,28 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import java.util.List;
+import java.util.Optional;
 
 public class PokedexControleur {
 
-    @FXML
-    private TextField champRecherche;
-    @FXML
-    private Button boutonRecherche;
-    @FXML
-    private ListView<String> listeCaptures;
-    @FXML
-    private Button boutonSupprimer;
+    @FXML private TextField champRecherche;
+    @FXML private Button boutonRecherche;
+    @FXML private ListView<String> listeCaptures;
+    @FXML private Button boutonSupprimer;
 
-    @FXML
-    private Label labelNomPokemon;
-    @FXML
-    private Label labelTypes;
-    @FXML
-    private ImageView imagePokemon;
+    @FXML private Label labelNomPokemon;
+    @FXML private Label labelTypes;
+    @FXML private ImageView imagePokemon;
 
-    @FXML
-    private ProgressBar barrePv;
-    @FXML
-    private ProgressBar barreAttaque;
-    @FXML
-    private ProgressBar barreDefense;
-    @FXML
-    private ProgressBar barreAttaqueSp;
-    @FXML
-    private ProgressBar barreDefenseSp;
-    @FXML
-    private ProgressBar barreVitesse;
+    @FXML private ProgressBar barrePv;
+    @FXML private ProgressBar barreAttaque;
+    @FXML private ProgressBar barreDefense;
+    @FXML private ProgressBar barreAttaqueSp;
+    @FXML private ProgressBar barreDefenseSp;
+    @FXML private ProgressBar barreVitesse;
 
-    @FXML
-    private VBox conteneurFiche;
+    @FXML private VBox conteneurFiche;
 
     private final PokemonApiService apiService = new PokemonApiService();
     private final PokemonDao pokemonDao = new PokemonDao();
@@ -57,19 +46,27 @@ public class PokedexControleur {
         // 1. Focus automatique au démarrage (Bonus +1 pt)
         Platform.runLater(() -> champRecherche.requestFocus());
 
-        // 2. Écouteur de sélection : Se déclenche quand l'utilisateur clique sur un élément de la liste
+        // 2. Écouteur de sélection pour le clic sur la liste
         listeCaptures.getSelectionModel().selectedItemProperty().addListener((observable, ancienneValeur, nouvelleValeur) -> {
             if (nouvelleValeur != null) {
-                // nouvelleValeur est sous la forme "#9 - blastoise"
                 String[] parties = nouvelleValeur.split(" - ");
                 if (parties.length > 1) {
-                    String nomSelectionne = parties[1].trim();
-                    chargerPokemonDepuisBaseDeDonnees(nomSelectionne);
+                    chargerPokemonDepuisBaseDeDonnees(parties[1].trim());
                 }
             }
         });
+
+        // 3. EXIGENCE MVP : Chargement automatique au démarrage depuis la base de données (Thread d'arrière-plan)
+        new Thread(() -> {
+            try {
+                List<String> pokemonsEnregistres = pokemonDao.recupererTousLesNoms();
+                Platform.runLater(() -> listeCaptures.getItems().addAll(pokemonsEnregistres));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
-    
+
     @FXML
     void actionRechercher() {
         String recherche = champRecherche.getText().trim();
@@ -98,14 +95,10 @@ public class PokedexControleur {
         }).start();
     }
 
-    /**
-     * Interroge le DAO local en arrière-plan pour obtenir les infos sans surcharger l'API.
-     */
     private void chargerPokemonDepuisBaseDeDonnees(String nom) {
         new Thread(() -> {
             try {
                 Pokemon pokemonEnCache = pokemonDao.recupererParNom(nom);
-
                 if (pokemonEnCache != null) {
                     Platform.runLater(() -> mettreAJourInterface(pokemonEnCache));
                 }
@@ -130,7 +123,7 @@ public class PokedexControleur {
             imagePokemon.setImage(null);
         }
 
-        // --- GESTION DU FOND DYNAMIQUE CSS ---
+        // Styles dynamiques CSS
         conteneurFiche.getStyleClass().removeAll(
                 "type-normal", "type-fire", "type-water", "type-electric", "type-grass",
                 "type-ice", "type-fighting", "type-poison", "type-ground", "type-flying",
@@ -140,7 +133,7 @@ public class PokedexControleur {
         String styleType = "type-" + p.typePrincipal().toLowerCase();
         conteneurFiche.getStyleClass().add(styleType);
 
-        // --- MISE À JOUR DES STATISTIQUES ---
+        // Statistiques
         barrePv.setProgress(p.pv() / 255.0);
         barreAttaque.setProgress(p.attaque() / 255.0);
         barreDefense.setProgress(p.defense() / 255.0);
@@ -148,18 +141,53 @@ public class PokedexControleur {
         barreDefenseSp.setProgress(p.defenseSpeciale() / 255.0);
         barreVitesse.setProgress(p.vitesse() / 255.0);
 
-        // format textuel standardisé dans le ListView
         String ligneAffichage = "#" + p.apiId() + " - " + p.nom();
         if (!listeCaptures.getItems().contains(ligneAffichage)) {
             listeCaptures.getItems().add(ligneAffichage);
         }
     }
 
+    /**
+     * EXIGENCE MVP : Suppression sécurisée avec boîte de dialogue de confirmation.
+     */
     @FXML
     void actionSupprimer() {
         String selection = listeCaptures.getSelectionModel().getSelectedItem();
         if (selection != null) {
-            listeCaptures.getItems().remove(selection);
+            Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmation.setTitle("Confirmation de suppression");
+            confirmation.setHeaderText(null);
+            confirmation.setContentText("Voulez-vous vraiment supprimer " + selection + " du Pokédex ?");
+
+            Optional<ButtonType> resultat = confirmation.showAndWait();
+            if (resultat.isPresent() && resultat.get() == ButtonType.OK) {
+                String[] parties = selection.split(" - ");
+                if (parties.length > 1) {
+                    String nomPokemon = parties[1].trim();
+
+                    new Thread(() -> {
+                        try {
+                            // Suppression physique en BD locale
+                            pokemonDao.supprimerParNom(nomPokemon);
+                            Platform.runLater(() -> {
+                                listeCaptures.getItems().remove(selection);
+                                // Réinitialisation de la fiche visuelle après suppression
+                                labelNomPokemon.setText("Pokédex Ultime");
+                                labelTypes.setText("Types: --");
+                                imagePokemon.setImage(null);
+                                barrePv.setProgress(0);
+                                barreAttaque.setProgress(0);
+                                barreDefense.setProgress(0);
+                                barreAttaqueSp.setProgress(0);
+                                barreDefenseSp.setProgress(0);
+                                barreVitesse.setProgress(0);
+                            });
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+                }
+            }
         }
     }
 

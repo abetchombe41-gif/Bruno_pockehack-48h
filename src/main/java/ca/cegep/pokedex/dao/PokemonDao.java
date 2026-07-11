@@ -5,6 +5,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PokemonDao {
     private final String url = "jdbc:postgresql://localhost:5432/pockehack_db";
@@ -81,5 +83,35 @@ public class PokemonDao {
             }
         }
         return null;
+    }
+
+    /**
+     * Récupère tous les Pokémon enregistrés pour l'affichage initial (Exigence MVP).
+     */
+    public List<String> recupererTousLesNoms() throws Exception {
+        List<String> liste = new ArrayList<>();
+        String sql = "SELECT api_id, nom FROM pokemon ORDER BY api_id ASC;";
+
+        try (Connection con = DriverManager.getConnection(url, utilisateur, motDePasse);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                liste.add("#" + rs.getInt("api_id") + " - " + rs.getString("nom"));
+            }
+        }
+        return liste;
+    }
+
+    /**
+     * Supprime un Pokémon de la base de données locale (Cohérence des données).
+     */
+    public void supprimerParNom(String nom) throws Exception {
+        String sql = "DELETE FROM pokemon WHERE nom = ?;";
+        try (Connection con = DriverManager.getConnection(url, utilisateur, motDePasse);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, nom.toLowerCase().trim());
+            ps.executeUpdate();
+        }
     }
 }
